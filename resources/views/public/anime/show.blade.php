@@ -16,8 +16,20 @@
         </flux:breadcrumbs.item>
     </flux:breadcrumbs>
 
+    <div class="flex flex-row items-center gap-2">
+        @foreach (['otakudesu' => 'Otakudesu', 'kuramanime' => 'Kuramanime'] as $key => $label)
+            <flux:button
+                href="{{ route('anime.show', ['anime' => $animeId, 'provider' => $key]) }}"
+                :variant="$provider === $key ? 'primary' : 'ghost'"
+                size="sm"
+            >
+                {{ $label }}
+            </flux:button>
+        @endforeach
+    </div>
+
     <a
-        href="{{ route('anime.episode.show', ['anime' => $animeId, 'episode' => $anime['data']['episodeList'][0]['episodeId']]) }}"
+        href="{{ route('anime.episode.show', ['anime' => $animeId, 'episode' => $anime['data']['episodeList'][0]['episodeId'], 'provider' => $provider]) }}"
         class="group relative aspect-video overflow-hidden rounded-lg"
     >
         <img
@@ -46,6 +58,7 @@
     <x-animes.episode
         :anime="$anime"
         :animeId="$animeId"
+        :provider="$provider"
         :watchedEpisodes="$watchedEpisodes"
     />
 

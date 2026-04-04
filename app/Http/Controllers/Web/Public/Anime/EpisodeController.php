@@ -13,37 +13,41 @@ class EpisodeController extends Controller
 {
     public function show(string $animeId, string $episodeId, Request $request)
     {
-        $anime = Cache::remember('anime-'.$animeId, now()->addMinutes(5), function () use ($animeId) {
+        $provider = in_array($request->query('provider'), ['otakudesu', 'kuramanime'])
+            ? $request->query('provider')
+            : config('app.anime_provider');
+
+        $anime = Cache::remember('anime-'.$provider.'-'.$animeId, now()->addMinutes(5), function () use ($animeId, $provider) {
             return $this->normalizeAnime(
-                Http::get(config('app.api_url').'/'.config('app.anime_provider').'/anime/'.$animeId)->json()
+                Http::get(config('app.api_url').'/'.$provider.'/anime/'.$animeId)->json()
             );
         });
 
-        if ($anime['statusCode'] != 200) {
-            abort($anime['statusCode']);
+        if (($anime['statusCode'] ?? 404) != 200) {
+            abort($anime['statusCode'] ?? 404);
         }
 
-        $episode = Cache::remember('episode-'.$episodeId, now()->addMinutes(5), function () use ($episodeId) {
+        $episode = Cache::remember('episode-'.$provider.'-'.$episodeId, now()->addMinutes(5), function () use ($episodeId, $provider) {
             return $this->normalizeEpisode(
-                Http::get(config('app.api_url').'/'.config('app.anime_provider').'/episode/'.$episodeId)->json()
+                Http::get(config('app.api_url').'/'.$provider.'/episode/'.$episodeId)->json()
             );
         });
 
-        if ($episode['statusCode'] != 200) {
-            abort($episode['statusCode']);
+        if (($episode['statusCode'] ?? 404) != 200) {
+            abort($episode['statusCode'] ?? 404);
         }
 
         if ($request->has('server')) {
             $server = $request->get('server');
-            $server = Cache::remember('server-'.$server, now()->addMinutes(5), function () use ($server) {
-                return Http::get(config('app.api_url').'/'.config('app.anime_provider').'/server/'.$server)->json();
+            $server = Cache::remember('server-'.$provider.'-'.$server, now()->addMinutes(5), function () use ($server, $provider) {
+                return Http::get(config('app.api_url').'/'.$provider.'/server/'.$server)->json();
             });
 
-            if ($server['statusCode'] != 200) {
-                abort($server['statusCode']);
+            if (($server['statusCode'] ?? 404) != 200) {
+                abort($server['statusCode'] ?? 404);
             }
 
-            $episode['data']['defaultStreamingUrl'] = $server['data']['url'];
+            $episode['data']['defaultStreamingUrl'] = $server['data']['details']['url'] ?? $server['data']['url'] ?? null;
         }
 
         if (Auth::check()) {
@@ -79,6 +83,7 @@ class EpisodeController extends Controller
             'anime' => $anime,
             'episodeId' => $episodeId,
             'episode' => $episode,
+            'provider' => $provider,
             'watchedEpisodes' => $watchedEpisodes,
         ];
 

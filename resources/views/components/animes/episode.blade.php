@@ -1,4 +1,4 @@
-@props(['anime', 'animeId', 'episodeId' => null, 'watchedEpisodes' => []])
+@props(['anime', 'animeId', 'episodeId' => null, 'watchedEpisodes' => [], 'provider' => 'otakudesu'])
 <div class="flex flex-col gap-2">
     <div class="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
         <div class="flex flex-col">
@@ -41,7 +41,7 @@
                 :variant="$variant"
                 :icon="$status === 'watched' ? 'check-circle' : 'play-circle'"
                 class="{{ $class ?? '' }} w-full"
-                href="{{ route('anime.episode.show', ['anime' => $animeId, 'episode' => $episode['episodeId']]) }}"
+                href="{{ route('anime.episode.show', ['anime' => $animeId, 'episode' => $episode['episodeId'], 'provider' => $provider]) }}"
             >
                 {{ $episode['title'] }}
             </flux:button>

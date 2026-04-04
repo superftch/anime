@@ -7,6 +7,7 @@ use App\Models\AnimeWatchHistory;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class AnimeController extends Controller
@@ -29,16 +30,20 @@ class AnimeController extends Controller
         return view('public.anime.index', $data);
     }
 
-    public function show(string $animeId): View
+    public function show(string $animeId, Request $request): View
     {
-        $anime = Cache::remember('anime-'.$animeId, now()->addMinutes(5), function () use ($animeId) {
+        $provider = in_array($request->query('provider'), ['otakudesu', 'kuramanime'])
+            ? $request->query('provider')
+            : config('app.anime_provider');
+
+        $anime = Cache::remember('anime-'.$provider.'-'.$animeId, now()->addMinutes(5), function () use ($animeId, $provider) {
             return $this->normalizeAnime(
-                Http::get(config('app.api_url').'/'.config('app.anime_provider').'/anime/'.$animeId)->json()
+                Http::get(config('app.api_url').'/'.$provider.'/anime/'.$animeId)->json()
             );
         });
 
-        if ($anime['statusCode'] != 200) {
-            abort($anime['statusCode']);
+        if (($anime['statusCode'] ?? 404) != 200) {
+            abort($anime['statusCode'] ?? 404);
         }
 
         if (Auth::check()) {
@@ -53,6 +58,7 @@ class AnimeController extends Controller
         $data = [
             'animeId' => $animeId,
             'anime' => $anime,
+            'provider' => $provider,
             'watchedEpisodes' => $watchedEpisodes,
         ];
 

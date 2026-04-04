@@ -52,8 +52,11 @@ class SeachModal extends Component
 
     public function searchManga(): void
     {
-        $mangas = Http::get(config('app.consumet_api_url').'/manga/mangadex/'.$this->search)->json();
-
-        $this->mangas = $mangas['results'] ?? [];
+        try {
+            $mangas = Http::get(config('app.consumet_api_url').'/manga/mangadex/'.$this->search)->json();
+            $this->mangas = $mangas['results'] ?? [];
+        } catch (\Illuminate\Http\Client\ConnectionException) {
+            $this->mangas = [];
+        }
     }
 }

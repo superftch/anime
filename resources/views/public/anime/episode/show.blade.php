@@ -26,10 +26,21 @@
     </div>
 
     <div class="flex flex-row flex-wrap items-center justify-between gap-2">
-        <livewire:save-anime
-            :animeId="$animeId"
-            :anime="$anime"
-        />
+        <div class="flex flex-row items-center gap-2">
+            <livewire:save-anime
+                :animeId="$animeId"
+                :anime="$anime"
+            />
+            @foreach (['otakudesu' => 'Otakudesu', 'kuramanime' => 'Kuramanime'] as $key => $label)
+                <flux:button
+                    href="{{ route('anime.show', ['anime' => $animeId, 'provider' => $key]) }}"
+                    :variant="$provider === $key ? 'primary' : 'ghost'"
+                    size="sm"
+                >
+                    {{ $label }}
+                </flux:button>
+            @endforeach
+        </div>
         <div class="flex flex-row items-center gap-2">
             <flux:dropdown
                 position="bottom"
@@ -92,6 +103,7 @@
         :anime="$anime"
         :animeId="$animeId"
         :episodeId="$episodeId"
+        :provider="$provider"
         :watchedEpisodes="$watchedEpisodes"
     />
 
