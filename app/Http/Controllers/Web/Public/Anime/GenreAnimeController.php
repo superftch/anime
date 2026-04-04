@@ -12,7 +12,7 @@ class GenreAnimeController extends Controller
     public function show(string $genre): View
     {
         $animes = Cache::remember('genre-animes-'.$genre, now()->addMinutes(5), function () use ($genre) {
-            return Http::get(config('app.api_url').'/samehadaku/genres/'.$genre)->json();
+            return Http::get(config('app.api_url').'/'.config('app.anime_provider').'/genre/'.$genre)->json();
         });
 
         $data = [

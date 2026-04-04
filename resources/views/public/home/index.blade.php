@@ -168,7 +168,7 @@
             </flux:button>
         </div>
         <div class="grid grid-cols-2 gap-2 md:grid-cols-4 lg:grid-cols-6">
-            @foreach (array_slice($home['data']['recent']['animeList'], 0, 12) as $anime)
+            @foreach (array_slice($home['data']['animeList'], 0, 12) as $anime)
                 <x-cards.anime :anime="$anime" />
             @endforeach
             <flux:button

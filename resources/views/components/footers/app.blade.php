@@ -8,7 +8,7 @@
                 />
                 <flux:button
                     icon="coffee"
-                    href="https://trakteer.id/weaboo-my-id"
+                    href="https://trakteer.id/ftch"
                 />
             </div>
             <flux:text class="lg:w-1/4">

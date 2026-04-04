@@ -13,7 +13,7 @@ class RecentAnimeController extends Controller
     public function index(Request $request): View
     {
         $animes = Cache::remember('recent-animes-'.$request->input('page', 1), now()->addMinutes(5), function () use ($request) {
-            return Http::get(config('app.api_url').'/samehadaku/recent', ['page' => $request->input('page', 1)])->json();
+            return Http::get(config('app.api_url').'/'.config('app.anime_provider').'/ongoing', ['page' => $request->input('page', 1)])->json();
         });
 
         $data = [

@@ -56,6 +56,8 @@ return [
 
     'api_url' => env('API_URL', 'http://localhost'),
 
+    'anime_provider' => env('ANIME_PROVIDER', 'otakudesu'),
+
     'consumet_api_url' => env('CONSUMET_API_URL', 'http://localhost'),
 
     /*

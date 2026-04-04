@@ -14,7 +14,9 @@ class EpisodeController extends Controller
     public function show(string $animeId, string $episodeId, Request $request)
     {
         $anime = Cache::remember('anime-'.$animeId, now()->addMinutes(5), function () use ($animeId) {
-            return Http::get(config('app.api_url').'/samehadaku/anime/'.$animeId)->json();
+            return $this->normalizeAnime(
+                Http::get(config('app.api_url').'/'.config('app.anime_provider').'/anime/'.$animeId)->json()
+            );
         });
 
         if ($anime['statusCode'] != 200) {
@@ -22,7 +24,9 @@ class EpisodeController extends Controller
         }
 
         $episode = Cache::remember('episode-'.$episodeId, now()->addMinutes(5), function () use ($episodeId) {
-            return Http::get(config('app.api_url').'/samehadaku/episode/'.$episodeId)->json();
+            return $this->normalizeEpisode(
+                Http::get(config('app.api_url').'/'.config('app.anime_provider').'/episode/'.$episodeId)->json()
+            );
         });
 
         if ($episode['statusCode'] != 200) {
@@ -32,7 +36,7 @@ class EpisodeController extends Controller
         if ($request->has('server')) {
             $server = $request->get('server');
             $server = Cache::remember('server-'.$server, now()->addMinutes(5), function () use ($server) {
-                return Http::get(config('app.api_url').'/samehadaku/server/'.$server)->json();
+                return Http::get(config('app.api_url').'/'.config('app.anime_provider').'/server/'.$server)->json();
             });
 
             if ($server['statusCode'] != 200) {
@@ -79,5 +83,47 @@ class EpisodeController extends Controller
         ];
 
         return view('public.anime.episode.show', $data);
+    }
+
+    private function normalizeEpisode(?array $response): array
+    {
+        if (! $response || empty($response['data']['details'])) {
+            return $response ?? [];
+        }
+
+        $details = $response['data']['details'];
+
+        // server: qualityList → qualities
+        if (isset($details['server']['qualityList'])) {
+            $details['server']['qualities'] = $details['server']['qualityList'];
+        }
+
+        // download: qualityList[{title,urlList}] → downloadUrl.formats[{title,qualities[{title,urls}]}]
+        if (isset($details['download']['qualityList'])) {
+            $qualities = array_map(fn($q) => [
+                'title' => $q['title'],
+                'urls'  => array_map(fn($u) => ['title' => $u['title'], 'url' => $u['url']], $q['urlList'] ?? []),
+            ], $details['download']['qualityList']);
+            $details['downloadUrl'] = ['formats' => [['title' => 'Download', 'qualities' => $qualities]]];
+        }
+
+        $response['data'] = array_merge($response['data'], $details);
+
+        return $response;
+    }
+
+    private function normalizeAnime(?array $response): array
+    {
+        if (! $response || empty($response['data']['details'])) {
+            return $response ?? [];
+        }
+
+        $details = $response['data']['details'];
+        $details['score'] = ['value' => $details['score'] ?? '-'];
+        $details['synopsis']['paragraphs'] = $details['synopsis']['paragraphList'] ?? [];
+        $details['season'] = $details['season'] ?? ($details['aired'] ?? null);
+        $response['data'] = array_merge($response['data'], $details);
+
+        return $response;
     }
 }

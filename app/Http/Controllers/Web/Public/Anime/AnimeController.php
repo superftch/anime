@@ -14,11 +14,11 @@ class AnimeController extends Controller
     public function index(): View
     {
         $animes = Cache::remember('anime', now()->addMinutes(5), function () {
-            return Http::get(config('app.api_url').'/samehadaku/anime/')->json();
+            return Http::get(config('app.api_url').'/'.config('app.anime_provider').'/anime/')->json();
         });
 
         $genres = Cache::remember('genres', now()->addMinutes(5), function () {
-            return Http::get(config('app.api_url').'/samehadaku/genres/')->json();
+            return Http::get(config('app.api_url').'/'.config('app.anime_provider').'/genre/')->json();
         });
 
         $data = [
@@ -32,7 +32,9 @@ class AnimeController extends Controller
     public function show(string $animeId): View
     {
         $anime = Cache::remember('anime-'.$animeId, now()->addMinutes(5), function () use ($animeId) {
-            return Http::get(config('app.api_url').'/samehadaku/anime/'.$animeId)->json();
+            return $this->normalizeAnime(
+                Http::get(config('app.api_url').'/'.config('app.anime_provider').'/anime/'.$animeId)->json()
+            );
         });
 
         if ($anime['statusCode'] != 200) {
@@ -55,5 +57,20 @@ class AnimeController extends Controller
         ];
 
         return view('public.anime.show', $data);
+    }
+
+    private function normalizeAnime(?array $response): array
+    {
+        if (! $response || empty($response['data']['details'])) {
+            return $response ?? [];
+        }
+
+        $details = $response['data']['details'];
+        $details['score'] = ['value' => $details['score'] ?? '-'];
+        $details['synopsis']['paragraphs'] = $details['synopsis']['paragraphList'] ?? [];
+        $details['season'] = $details['season'] ?? ($details['aired'] ?? null);
+        $response['data'] = array_merge($response['data'], $details);
+
+        return $response;
     }
 }

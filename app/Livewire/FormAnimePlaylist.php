@@ -45,7 +45,7 @@ class FormAnimePlaylist extends Component
 
     public function searchAnime(): void
     {
-        $animes = Http::get(config('app.api_url').'/samehadaku/search', ['q' => $this->search])->json();
+        $animes = Http::get(config('app.api_url').'/'.config('app.anime_provider').'/search', ['q' => $this->search])->json();
 
         $this->animes = $animes['data']['animeList'] ?? [];
     }

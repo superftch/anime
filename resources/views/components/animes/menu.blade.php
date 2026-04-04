@@ -67,7 +67,7 @@
     @endauth
     <flux:button
         icon="coffee"
-        href="https://trakteer.id/weaboo-my-id"
+        href="https://trakteer.id/ftch"
         class="md:col-span-2"
     >
         Donasi

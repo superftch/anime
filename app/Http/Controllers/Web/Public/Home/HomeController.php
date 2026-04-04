@@ -14,7 +14,8 @@ class HomeController extends Controller
     public function index(): View
     {
         $home = Cache::remember('home', now()->addMinutes(5), function () {
-            return Http::get(config('app.api_url').'/samehadaku/home')->json();
+            $response = Http::get(config('app.api_url').'/'.config('app.anime_provider').'/ongoing')->json();
+            return $response['data'] ? $response : ['data' => ['animeList' => []], 'statusCode' => 200];
         });
         $news = Cache::remember('news', now()->addMinutes(5), function () {
             return News::where('is_published', true)->latest()->with(['media'])->limit(4)->get();
